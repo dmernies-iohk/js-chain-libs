@@ -7,7 +7,6 @@ import Container from 'react-bootstrap/Container';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import Row from 'react-bootstrap/Row';
-import Modal from 'react-bootstrap/Modal';
 import routes from '../constants/routes.json';
 import typeof {
   setAccountFromMnemonic as SetAccountFromMnemonic,
@@ -35,6 +34,10 @@ export default ({
   mnemonicPhrase,
   mnemonicPassword
 }: Props) => {
+  const checkIsValidMnemonicPhrase = function checkIsValidMnemonicPhrase() {
+    setShowWrongMnemonicPhrase(!isValidMnemonic(newMnemonicPhrase));
+  };
+
   const handleSubmitKeyString = function handleSubmitKeyString(event) {
     event.preventDefault();
     return Promise.all([setAccount(newPrivateKey), updateNodeSettings()]);
@@ -42,6 +45,7 @@ export default ({
 
   const handleSubmitMnemonic = function handleSubmitMnemonic(event) {
     event.preventDefault();
+    document.getElementById('mnemonicPhrase').blur();
     const mnemonicWords = newMnemonicPhrase.split(' ');
     if (isValidMnemonic(newMnemonicPhrase)) {
       return Promise.all([
@@ -60,8 +64,6 @@ export default ({
   }
 
   const [showWrongMnemonicPhrase, setShowWrongMnemonicPhrase] = useState(false);
-
-  const handleClose = () => setShowWrongMnemonicPhrase(false);
 
   const [newPrivateKey, setNewPrivateKey] = useState(privateKey);
 
@@ -113,11 +115,22 @@ export default ({
               <Form.Control
                 required
                 type="text"
+                id="mnemonicPhrase"
                 name="mnemonicPhrase"
                 placeholder="Enter your secret word phrase here to restore your vault. The phrase can have 12, 15, 18, 21 or 24 words."
                 value={newMnemonicPhrase}
+                isInvalid={showWrongMnemonicPhrase}
                 onChange={event => setNewMnemonicPhrase(event.target.value)}
+                onBlur={event => checkIsValidMnemonicPhrase(event.target.value)}
               />
+              <Form.Label
+                className="text-danger"
+                srOnly={!showWrongMnemonicPhrase}
+              >
+                <code>
+                  The phrase can have 12, 15, 18, 21 or 24 valid words.
+                </code>
+              </Form.Label>
               <Form.Text>
                 Example:
                 <br />
@@ -145,20 +158,6 @@ export default ({
               </Button>
             </Row>
           </Form>
-
-          <Modal show={showWrongMnemonicPhrase} onHide={handleClose}>
-            <Modal.Header closeButton>
-              <Modal.Title>Wrong mnemonic phrase</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              A mnemonic phrase can have 12, 15, 18, 21 or 24 valid words.
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="primary" onClick={handleClose}>
-                Close
-              </Button>
-            </Modal.Footer>
-          </Modal>
         </Container>
       </Tab>
     </Tabs>
